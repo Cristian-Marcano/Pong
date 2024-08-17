@@ -2,6 +2,7 @@
 #include "stage.h"
 #include "ball.h"
 #include "paddles.h"
+#include "scoreBoard.h"
 
 void CheckCollisionPaddleAndBall(Ball*, Paddle*, int);
 
@@ -19,6 +20,7 @@ int main() {
     Ball *myBall = new Ball();
     Paddle *myPaddle = new Paddle(true);
     CPUPaddle *cpu = new CPUPaddle(false);
+    ScoreBoard *score = new ScoreBoard();
 
     do {
         //* 1. Event Handling
@@ -26,6 +28,8 @@ int main() {
             myPaddle->UpdateForResizing(screenHeight);
             cpu->UpdateForResizing(screenHeight);
             myBall->UpdateForResizing(screenWidth, screenHeight);
+            score->UpdateForResizing();
+        
             screenWidth = GetScreenWidth();
             screenHeight = GetScreenHeight();
         }
@@ -33,8 +37,8 @@ int main() {
         myPaddle->UpdateByKey();
 
         //* 2. Updating Position
-        myBall->Update();
-        cpu->Update((int) myBall->GetY());
+        myBall->Update(score);
+        cpu->Update((int) myBall->GetX(), (int) myBall->GetY(), myBall->GetSpeedX());
 
         //* 3. Check Collision 
         CheckCollisionPaddleAndBall(myBall, myPaddle, 1);
@@ -46,6 +50,7 @@ int main() {
             myBall->Draw();
             myPaddle->Draw();
             cpu->Draw();
+            score->Draw();
         EndDrawing();
     } while (!WindowShouldClose());
 
@@ -56,10 +61,10 @@ int main() {
 void CheckCollisionPaddleAndBall(Ball *ball, Paddle *paddle, int direction) {
     if(CheckCollisionCircleRec({ ball->GetX(), ball->GetY()}, ball->GetRadius(), {paddle->GetX(), paddle->GetY(), paddle->GetWidth(), paddle->GetHeight()})) {
         int potentialChoicesX[3] = { 500, 330, 250 };
-        int potentialChoicesY[4] = { 500, 250, 200, 160 };
+        int potentialChoicesY[5] = { 500, 400, 250, 200, 160 };
 
         int pChoiceX = GetRandomValue(1,2);
-        int pChoiceY = GetRandomValue(1,3);
+        int pChoiceY = GetRandomValue(2,4);
 
         if(paddle->GetLastMove() == 1) {
             ball->SetSpeedY(potentialChoicesY[pChoiceY], -1);
@@ -73,7 +78,7 @@ void CheckCollisionPaddleAndBall(Ball *ball, Paddle *paddle, int direction) {
             int speedChoices[2] = { 0, (ball->GetSpeedY() < 0) ? -1 : 1};
 
             int sChoice = GetRandomValue(0,1);
-            pChoiceY = GetRandomValue(0,2);
+            pChoiceY = GetRandomValue(0,1);
             pChoiceX = GetRandomValue(0,2);
 
             ball->SetSpeedY(potentialChoicesY[pChoiceY], speedChoices[sChoice]);
