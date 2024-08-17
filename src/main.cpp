@@ -1,11 +1,11 @@
 #include <raylib.h>
-#include <iostream>
 #include "stage.h"
 #include "ball.h"
 #include "paddles.h"
 
-int main() {
+void CheckCollisionPaddleAndBall(Ball*, Paddle*, int);
 
+int main() {
     static int screenWidth = 1280, screenHeight = 720;
 
     InitWindow(screenWidth, screenHeight, "Ping Pong");
@@ -16,34 +16,68 @@ int main() {
     SetTargetFPS(60);
 
     Stage *stage = new Stage(Color{20, 160, 133, 255},  Color{38, 185, 154, 255}, Color{129, 204, 184, 255});
-    Ball *myBalls = new Ball();
-    Paddles *myPaddles = new Paddles(true);
+    Ball *myBall = new Ball();
+    Paddle *myPaddle = new Paddle(true);
+    CPUPaddle *cpu = new CPUPaddle(false);
 
     do {
         //* 1. Event Handling
         if(IsWindowResized()) {
-            myPaddles->UpdateForResizing(screenHeight);
-            myBalls->UpdateForResizing(screenWidth, screenHeight);
+            myPaddle->UpdateForResizing(screenHeight);
+            cpu->UpdateForResizing(screenHeight);
+            myBall->UpdateForResizing(screenWidth, screenHeight);
             screenWidth = GetScreenWidth();
             screenHeight = GetScreenHeight();
         }
 
-        myPaddles->UpdateByKey();
+        myPaddle->UpdateByKey();
 
         //* 2. Updating Position
-        myBalls->Update();
+        myBall->Update();
+        cpu->Update((int) myBall->GetY());
 
         //* 3. Check Collision 
-        // if(CheckCollisionCircleRec())
+        CheckCollisionPaddleAndBall(myBall, myPaddle, 1);
+        CheckCollisionPaddleAndBall(myBall, cpu, -1);
 
         //* 4. Drawing
         BeginDrawing();
             stage->ClearStage();
-            myBalls->Draw();
-            myPaddles->Draw();
+            myBall->Draw();
+            myPaddle->Draw();
+            cpu->Draw();
         EndDrawing();
     } while (!WindowShouldClose());
 
     CloseWindow();
     return 0;
+}
+
+void CheckCollisionPaddleAndBall(Ball *ball, Paddle *paddle, int direction) {
+    if(CheckCollisionCircleRec({ ball->GetX(), ball->GetY()}, ball->GetRadius(), {paddle->GetX(), paddle->GetY(), paddle->GetWidth(), paddle->GetHeight()})) {
+        int potentialChoicesX[3] = { 500, 330, 250 };
+        int potentialChoicesY[4] = { 500, 250, 200, 160 };
+
+        int pChoiceX = GetRandomValue(1,2);
+        int pChoiceY = GetRandomValue(1,3);
+
+        if(paddle->GetLastMove() == 1) {
+            ball->SetSpeedY(potentialChoicesY[pChoiceY], -1);
+            ball->SetSpeedX(potentialChoicesX[pChoiceX] * direction);
+
+        } else if(paddle->GetLastMove() == -1) {
+            ball->SetSpeedY(potentialChoicesY[pChoiceY], 1);
+            ball->SetSpeedX(potentialChoicesX[pChoiceX] * direction);
+
+        } else {
+            int speedChoices[2] = { 0, (ball->GetSpeedY() < 0) ? -1 : 1};
+
+            int sChoice = GetRandomValue(0,1);
+            pChoiceY = GetRandomValue(0,2);
+            pChoiceX = GetRandomValue(0,2);
+
+            ball->SetSpeedY(potentialChoicesY[pChoiceY], speedChoices[sChoice]);
+            ball->SetSpeedX(potentialChoicesX[pChoiceX] * direction);
+        }
+    } 
 }
