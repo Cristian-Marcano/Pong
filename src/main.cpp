@@ -2,6 +2,7 @@
 #include "stage.h"
 #include "ball.h"
 #include "paddles.h"
+#include "scoreBoard.h"
 
 void CheckCollisionPaddleAndBall(Ball*, Paddle*, int);
 
@@ -19,6 +20,7 @@ int main() {
     Ball *myBall = new Ball();
     Paddle *myPaddle = new Paddle(true);
     CPUPaddle *cpu = new CPUPaddle(false);
+    ScoreBoard *score = new ScoreBoard();
 
     do {
         //* 1. Event Handling
@@ -26,6 +28,8 @@ int main() {
             myPaddle->UpdateForResizing(screenHeight);
             cpu->UpdateForResizing(screenHeight);
             myBall->UpdateForResizing(screenWidth, screenHeight);
+            score->UpdateForResizing();
+
             screenWidth = GetScreenWidth();
             screenHeight = GetScreenHeight();
         }
@@ -33,8 +37,8 @@ int main() {
         myPaddle->UpdateByKey();
 
         //* 2. Updating Position
-        myBall->Update();
-        cpu->Update((int) myBall->GetY());
+        myBall->Update(score);
+        cpu->Update((int) myBall->GetX(), (int) myBall->GetY(), myBall->GetSpeedX());
 
         //* 3. Check Collision 
         CheckCollisionPaddleAndBall(myBall, myPaddle, 1);
@@ -46,6 +50,7 @@ int main() {
             myBall->Draw();
             myPaddle->Draw();
             cpu->Draw();
+            score->Draw();
         EndDrawing();
     } while (!WindowShouldClose());
 
